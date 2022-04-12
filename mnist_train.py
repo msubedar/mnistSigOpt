@@ -1,15 +1,30 @@
+import os
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
-import sigopt as so
+import sigopt as sopt
+import argparse
+from tqdm import tqdm
+
+PROJECT_NAME = "MNIST_TRAIN"  # Give a project name
+
+os.environ["SIGOPT_PROJECT"] = PROJECT_NAME
 
 DATA_DIR = "./data"
 
-USE_CUDA = True
+USE_CUDA = "cuda"
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
+sopt.log_dataset("MNIST")  # Tag Dataset name
+
+
+parser = argparse.ArgumentParser(PROJECT_NAME)
+parser.add_argument("--batch_size", type=int, default=1024, help="batch size for training/test")
+parser.add_argument("--num_epochs", type=int, default=10, help="number of epochs for training")
+parser.add_argument("--log_learning_rate", type=float, default=-3, help="log10 learning rate")
+parser.add_argument("--save_model", type=bool, default=True, help="Flag to save trained model")
 
 
 class TrainModel(object):
@@ -58,9 +73,11 @@ class TrainModel(object):
     def train(self):
         print(self.params)
         num_epochs = self.params["num_epochs"]
+        print("lr:", 10 ** self.params["log_learning_rate"])
         optimizer = torch.optim.Adam(self.net.parameters(), lr=10 ** self.params["log_learning_rate"])
         cost = torch.nn.CrossEntropyLoss()
-        for epoch in range(num_epochs):
+        best_acc = 0
+        for epoch in tqdm(range(num_epochs)):
             self.net.train()
             for bind, (images, labels) in enumerate(self.train_loader):
                 images, labels = images.to(DEVICE), labels.to(DEVICE)
@@ -70,8 +87,12 @@ class TrainModel(object):
                 loss.backward()
                 optimizer.step()
             acc = self.evaluate_model()
+            if best_acc < acc:
+                best_acc = acc
+                if self.params["save_model"]:
+                    torch.save(self.net.state_dict(), "best_model.pth")
             print("training epoch: {:04d},  Test Accuracy = {:03f}".format(epoch, acc))
-        return self.net
+        return acc
 
     # evaluate model
     def evaluate_model(self):
@@ -85,3 +106,25 @@ class TrainModel(object):
             total += labels.size(0)
             correct += (predicted == labels).sum()
         return float(correct) / total
+
+
+def main():
+    args = parser.parse_args()
+    # add parameters you want to track using sigopt. these will also include hyperparameters that you want to tune
+    sopt.params.setdefault("batch_size", args.batch_size)
+    sopt.params.setdefault("num_epochs", args.num_epochs)
+    sopt.params.setdefault("log_learning_rate", args.log_learning_rate)
+
+    params = {
+        "batch_size": sopt.params.batch_size,
+        "num_epochs": sopt.params.num_epochs,
+        "log_learning_rate": sopt.params.log_learning_rate,
+        "save_model": args.save_model,
+    }
+    model = TrainModel(params)
+    best_acc = model.train()
+    sopt.log_metric("test_acc", best_acc)  # Add other metrics you want to log, e.g. loss, f1 score,
+
+
+if __name__ == "__main__":
+    main()
