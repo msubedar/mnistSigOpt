@@ -4,12 +4,11 @@ from torch import nn
 import torch.nn.functional as F
 from torchvision import transforms
 from torchvision.datasets import MNIST
-from torch.utils.data import DataLoader
 import sigopt as sopt
 import argparse
 from tqdm import tqdm
 
-PROJECT_NAME = "MNIST_TRAIN"  # Give a project name
+PROJECT_NAME = "MNIST_TRAIN"  # SIGOPT: Give a project name
 
 os.environ["SIGOPT_PROJECT"] = PROJECT_NAME
 
@@ -17,7 +16,8 @@ DATA_DIR = "./data"
 
 USE_CUDA = "cuda"
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
-sopt.log_dataset("MNIST")  # Tag Dataset name
+# SIGOPT: Tag Dataset name
+sopt.log_dataset("MNIST")
 
 
 parser = argparse.ArgumentParser(PROJECT_NAME)
@@ -110,11 +110,14 @@ class TrainModel(object):
 
 def main():
     args = parser.parse_args()
-    # add parameters you want to track using sigopt. these will also include hyperparameters that you want to tune
+    # SIGOPT: add parameters that you want to track using sigopt.
+    # these will also include hyperparameters that you want to tune
     sopt.params.setdefault("batch_size", args.batch_size)
     sopt.params.setdefault("num_epochs", args.num_epochs)
     sopt.params.setdefault("log_learning_rate", args.log_learning_rate)
 
+    # SIGOPT: initailize the parametres you want to tune from the sigopt.params
+    # rest can be initialized frmo argparse
     params = {
         "batch_size": sopt.params.batch_size,
         "num_epochs": sopt.params.num_epochs,
@@ -123,7 +126,8 @@ def main():
     }
     model = TrainModel(params)
     best_acc = model.train()
-    sopt.log_metric("test_acc", best_acc)  # Add other metrics you want to log, e.g. loss, f1 score,
+    # SIGOPT: Add the metrics you want to log, e.g. loss, f1 score
+    sopt.log_metric("test_acc", best_acc)
 
 
 if __name__ == "__main__":

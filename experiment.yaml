@@ -1,0 +1,21 @@
+# experiment.yml
+# documentatoin: https://app.sigopt.com/docs/experiments/options
+name: MNIST Optimization
+metrics:
+  - name: test_acc
+    strategy: optimize
+    objective: maximize
+parameters: # documentation: https://app.sigopt.com/docs/experiments/parameter_space
+  - name: num_epochs
+    bounds:
+      min: 10
+      max: 20
+    type: int
+  - name: batch_size
+    grid:
+      - 128
+      - 256
+      - 512
+      - 1024
+    type: int
+budget: 10
