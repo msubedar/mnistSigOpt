@@ -117,7 +117,7 @@ def main():
     sopt.params.setdefault("num_epochs", args.num_epochs)
     sopt.params.setdefault("log_learning_rate", args.log_learning_rate)
 
-    # SIGOPT: initialize the parameters you want to tune/log from the sigopt.params
+    # SIGOPT: initialize the parameters you want to tune from the sigopt.params
     # rest can be initialized from ArgParse
     params = {
         "batch_size": sopt.params.batch_size,
