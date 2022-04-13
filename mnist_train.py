@@ -8,7 +8,8 @@ import sigopt as sopt
 import argparse
 from tqdm import tqdm
 
-PROJECT_NAME = "MNIST_TRAIN"  # SIGOPT: Give a project name
+# SIGOPT: Give a project name
+PROJECT_NAME = "MNIST_TRAIN"  
 
 os.environ["SIGOPT_PROJECT"] = PROJECT_NAME
 
@@ -116,8 +117,8 @@ def main():
     sopt.params.setdefault("num_epochs", args.num_epochs)
     sopt.params.setdefault("log_learning_rate", args.log_learning_rate)
 
-    # SIGOPT: initailize the parametres you want to tune from the sigopt.params
-    # rest can be initialized frmo argparse
+    # SIGOPT: initialize the parameters you want to tune from the sigopt.params
+    # rest can be initialized from ArgParse
     params = {
         "batch_size": sopt.params.batch_size,
         "num_epochs": sopt.params.num_epochs,
