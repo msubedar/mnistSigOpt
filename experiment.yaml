@@ -1,5 +1,5 @@
 # experiment.yml
-# documentatoin: https://app.sigopt.com/docs/experiments/options
+# documentation: https://app.sigopt.com/docs/experiments/options
 name: MNIST Optimization
 metrics:
   - name: test_acc
